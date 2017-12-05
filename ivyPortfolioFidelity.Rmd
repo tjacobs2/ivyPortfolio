@@ -37,92 +37,27 @@ etfs <- data.frame(ETF = c("DBA", "DBC", "IFGL", "IYR", "TIP",
                    Type = c("Agricultural", "Commodities", "Intl Real Estate",
                             "US Real Estate", "TIPs Bonds", "US Aggregated Bonds",
                             "Emerging Markets", "Foreign Total", "S&P Small Cap",
-                            "S&P Total"),
-                   "Commission Free" = c("No", "No", "Yes", "No", "Yes",
-                                         "Yes", "Yes", "Yes", "Yes", "Yes"),
-                   check.names = FALSE)
+                            "S&P Total"))
 
-# ETF Data
-agricultural <- tq_get("DBA", get = "stock.prices",
-                      from = "2004-01-01", to = today)
-agricultural$etf <- "DBA"
-agricultural$type <- etfs[etfs$ETF == "DBA",]$Type
-agricultural <- tq_mutate(agricultural, select = adjusted,
-                          mutate_fun = rollapply, FUN = mean,
-                          width = 200, align = "right",
-                          col_rename = "avg200")
-commodities <- tq_get("DBC", get = "stock.prices",
-                      from = "2004-01-01", to = today)
-commodities$etf <- "DBC"
-commodities$type <- etfs[etfs$ETF == "DBC",]$Type
-commodities <- tq_mutate(commodities, select = adjusted,
-                         mutate_fun = rollapply, FUN = mean,
-                         width = 200, align = "right",
-                         col_rename = "avg200")
-internationalRealEstate <- tq_get("IFGL", get = "stock.prices",
-                      from = "2004-01-01", to = today)
-internationalRealEstate$etf <- "IFGL"
-internationalRealEstate$type <- etfs[etfs$ETF == "IFGL",]$Type
-internationalRealEstate <- tq_mutate(internationalRealEstate, select = adjusted,
-                                     mutate_fun = rollapply, FUN = mean,
-                                     width = 200, align = "right",
-                                     col_rename = "avg200")
-usRealEstate <- tq_get("IYR", get = "stock.prices",
-                      from = "2004-01-01", to = today)
-usRealEstate$etf <- "IYR"
-usRealEstate$type <- etfs[etfs$ETF == "IYR",]$Type
-usRealEstate <- tq_mutate(usRealEstate, select = adjusted,
-                          mutate_fun = rollapply, FUN = mean,
-                          width = 200, align = "right",
-                          col_rename = "avg200")
-tipsBond <- tq_get("TIP", get = "stock.prices",
-                      from = "2004-01-01", to = today)
-tipsBond$etf <- "TIP"
-tipsBond$type <- etfs[etfs$ETF == "TIP",]$Type
-tipsBond <- tq_mutate(tipsBond, select = adjusted,
-                      mutate_fun = rollapply, FUN = mean,
-                      width = 200, align = "right",
-                      col_rename = "avg200")
-aggregatedBond <- tq_get("AGG", get = "stock.prices",
-                      from = "2004-01-01", to = today)
-aggregatedBond$etf <- "AGG"
-aggregatedBond$type <- etfs[etfs$ETF == "AGG",]$Type
-aggregatedBond <- tq_mutate(aggregatedBond, select = adjusted,
-                            mutate_fun = rollapply, FUN = mean,
-                            width = 200, align = "right",
-                            col_rename = "avg200")
-emergingMarkets <- tq_get("IEMG", get = "stock.prices",
-                      from = "2004-01-01", to = today)
-emergingMarkets$etf <- "IEMG"
-emergingMarkets$type <- etfs[etfs$ETF == "IEMG",]$Type
-emergingMarkets <- tq_mutate(emergingMarkets, select = adjusted,
-                             mutate_fun = rollapply, FUN = mean,
-                             width = 200, align = "right",
-                             col_rename = "avg200")
-foreignTotal <- tq_get("IEFA", get = "stock.prices",
-                      from = "2004-01-01", to = today)
-foreignTotal$etf <- "IEFA"
-foreignTotal$type <- etfs[etfs$ETF == "IEFA",]$Type
-foreignTotal <- tq_mutate(foreignTotal, select = adjusted,
-                          mutate_fun = rollapply, FUN = mean,
-                          width = 200, align = "right",
-                          col_rename = "avg200")
-sAndPSmallCap <- tq_get("IJR", get = "stock.prices",
-                      from = "2004-01-01", to = today)
-sAndPSmallCap$etf <- "IJR"
-sAndPSmallCap$type <- etfs[etfs$ETF == "IJR",]$Type
-sAndPSmallCap <- tq_mutate(sAndPSmallCap, select = adjusted,
-                           mutate_fun = rollapply, FUN = mean,
-                           width = 200, align = "right",
-                           col_rename = "avg200")
-sAndPTotal <- tq_get("ITOT", get = "stock.prices",
-                      from = "2004-01-01", to = today)
-sAndPTotal$etf <- "ITOT"
-sAndPTotal$type <- etfs[etfs$ETF == "ITOT",]$Type
-sAndPTotal <- tq_mutate(sAndPTotal, select = adjusted,
-                        mutate_fun = rollapply, FUN = mean,
-                        width = 200, align = "right",
-                        col_rename = "avg200")
+# Function to retrieve and populate with custom fields a tidyquant stock datafram
+generate_ETF_dataframe <- function(ticker) {
+  newEtf <- tq_get(ticker, get = "stock.prices", from = "2004-01-01", to = today)
+  newEtf$etf <- ticker
+  newEtf$type <- etfs[etfs$ETF == ticker,]$Type
+  newEtf <- tq_mutate(newEtf, select = adjusted, mutate_fun = rollapply, FUN = mean,
+         width = 200, align = "right", col_rename = "avg200")
+  return(newEtf)
+}
+agricultural <- generate_ETF_dataframe("DBA")
+commodities <- generate_ETF_dataframe("DBC")
+internationalRealEstate <- generate_ETF_dataframe("IFGL")
+usRealEstate <- generate_ETF_dataframe("IYR")
+tipsBond <- generate_ETF_dataframe("TIP")
+aggregatedBond <- generate_ETF_dataframe("AGG")
+emergingMarkets <- generate_ETF_dataframe("IEMG")
+foreignTotal <- generate_ETF_dataframe("IEFA")
+sAndPSmallCap <- generate_ETF_dataframe("IJR")
+sAndPTotal <- generate_ETF_dataframe("ITOT")
 
 portfolioPriceHistory <- rbind(agricultural, commodities, internationalRealEstate,
                                usRealEstate, tipsBond, aggregatedBond, emergingMarkets,
@@ -171,13 +106,9 @@ rm(a, r)
 ```
 
 The Fidelity ETFs were selected by [Scotts Investments](http://www.scottsinvestments.com/). I use the `R` package `tidyquant` to fetch the ETF prices from Yahoo. The table below shows the ETFs chosen for the portfolio.
-
 ```{r etfTable}
 kable(etfs)
 ```
-
-Fidelity has a commission-free alternative to the IYR; the FREL ETF. And there is a commission-free growth stock alternative to IJR (which is also commission-free); the IJT. It looks to have slightly better performance. There are alternatives to IFGL that have much better performance but are not commission-free. 
-
 
 ## Price History
 The plot below shows a history of adjusted closing price for each ETF. One can get a sense of the performance over the past three years as well as some idea of the correlations between each asset class. However a more explicit measurement of cross-correlation will be presented in a section below.
@@ -290,12 +221,11 @@ kable(lastTransactions[,c("etf", "type", "adjusted", "avg200", "action", "date")
 ```
 
 
-
 # Using Rotation System
-An alternative to the timing strategy discussed above is the *Rotation* strategy which is an allocation strategy. In this strategy, all of the money is invested in the 3 best-performing asset classes that have returns above the 200 day simple moving average but the asset classes it is invested in can change (or rotate) from month to month. This strategy is designed to give some protection against individual ETF downturns since the investments are chosen to be uncorrelated[^top3]. One of the examples given in the book suggests investing equally in the top 3 performing ETFs. ETF performance is determined by averaging the 3, 6, and 12 month total returns. This calculation again uses the adjusted returns for the calculation and the performance evaluation is again only made on the first trading day of the month. As a tool to aid the investor as to which funds to invest in, the following plot shows the average total return for all of the ETFs, ordered high to low, left to right. Each bar shows the average return for an ETF. The color of the bar shows if the current adjusted price is above or below the 200 day simple moving average.
+An alternative to the timing strategy discussed above is the *Rotation* strategy which is an allocation strategy. In this strategy, all of the money is invested in the 3 best-performing asset classes that have returns above the 200 day simple moving average but the asset classes it is invested can change (or rotate) from month to month. This strategy is designed to give some protection against individual ETF downturns since the investments are chosen because of their low correlation to one another[^top3]. One of the examples given in the book suggests investing equally in the top 3 performing ETFs. ETF performance is determined by averaging the 3, 6, and 12 month total returns. This calculation again uses the adjusted returns for the calculation and the performance evaluation is again only made on the first trading day of the month. As a tool to aid the investor as to which funds to invest in, the following plot shows the average total return for all of the ETFs, ordered high to low, left to right. Each bar shows the average return for an ETF. The color of the bar shows if the current adjusted price is above or below the 200 day simple moving average.
 
 
-[^top3]: I am not convinced that this rationale holds because the investments are correlated to some extent and it is reasonable to expect that those investment that are performing well at any given time might be more correlated than the average.
+[^top3]: I am not convinced that this rationale holds because the investments are correlated to some extent.
 
 ```{r momentumBar}
 plotData <- decisions[decisions$date == max(decisions$date),]
