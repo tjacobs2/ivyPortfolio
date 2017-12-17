@@ -7,12 +7,22 @@ library("ggalt")
 library("tidyquant")
 library("reshape2")
 
+etfOptions = c("DBA", "DBC", "IFGL", "IYR", "TIP",
+        "AGG", "IEMG", "IEFA", "IJR", "ITOT")
+
 ui <- fluidPage(
   dateRangeInput(
     inputId = "dateRange", 
     label="Date Range",
     start="2004-01-01",
     end=Sys.Date()
+  ),
+  selectInput(
+    inputId = "assetSelect",
+    choices = etfOptions,
+    label="ETF Selection",
+    multiple = TRUE,
+    selectize = TRUE
   ),
   dataTableOutput("etfs"),
   actionButton(inputId = "submit", label ="Fetch ETF Data"),
@@ -21,27 +31,27 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   
-  #Set the detault set of ETFs
-  etfs <- data.frame(ETF = c("DBA", "DBC", "IFGL", "IYR", "TIP",
-                             "AGG", "IEMG", "IEFA", "IJR", "ITOT"),
-                     Type = c("Agricultural", "Commodities", "Intl Real Estate",
-                              "US Real Estate", "TIPs Bonds", "US Aggregated Bonds",
-                              "Emerging Markets", "Foreign Total", "S&P Small Cap",
-                              "S&P Total"),
-                     "Commission Free" = c("No", "No", "Yes", "No", "Yes",
-                                           "Yes", "Yes", "Yes", "Yes", "Yes"),
-                     check.names = FALSE)
-  
-  # Test data set
-  # etfs <- data.frame(ETF = c("DBA", "DBC"),
-  #                    Type = c("Agricultural", "Commodities"),
-  #                    "Commission Free" = c("No", "No"),
-  #                    check.names = FALSE)
-  
   #Show the user the ETFs we are using
   output$etfs <- renderDataTable({
     title <- "ETF Information"
-    etfs
+   
+    #Set the detault set of ETFs
+    etfs <- data.frame(ETF = c("DBA", "DBC", "IFGL", "IYR", "TIP",
+                               "AGG", "IEMG", "IEFA", "IJR", "ITOT"),
+                       Type = c("Agricultural", "Commodities", "Intl Real Estate",
+                                "US Real Estate", "TIPs Bonds", "US Aggregated Bonds",
+                                "Emerging Markets", "Foreign Total", "S&P Small Cap",
+                                "S&P Total"),
+                       "Commission Free" = c("No", "No", "Yes", "No", "Yes",
+                                             "Yes", "Yes", "Yes", "Yes", "Yes"),
+                       check.names = FALSE)
+    # print(etfs)
+    # print(etfs$ETF)
+    print(input$assetSelect)
+    # etfs <- etfs[c(input$assetSelect),]
+    print(etfs)
+    print(c(input$assetSelect))
+    # etfs <- subset[etfs, "ETF" == input$assetSelect]
   })
   
   #Add an observer to the fetch button that populates a data frame of ETF data.
@@ -68,30 +78,6 @@ server <- function(input, output) {
                                 col_rename = "avg200")
       assetPriceHistory <- rbind(assetPriceHistory, curEtf)
     }
-    
-    ######### TEST DATA
-    # ETF Data
-    # today <- Sys.Date()
-    # agricultural <- tq_get("DBA", get = "stock.prices",
-    #                        from = "2004-01-01", to = today)
-    # agricultural$etf <- "DBA"
-    # agricultural$type <- etfs[etfs$ETF == "DBA",]$Type
-    # agricultural <- tq_mutate(agricultural, select = adjusted,
-    #                           mutate_fun = rollapply, FUN = mean,
-    #                           width = 200, align = "right",
-    #                           col_rename = "avg200")
-    # 
-    # commodities <- tq_get("DBC", get = "stock.prices",
-    #                       from = "2004-01-01", to = today)
-    # commodities$etf <- "DBC"
-    # commodities$type <- etfs[etfs$ETF == "DBC",]$Type
-    # commodities <- tq_mutate(commodities, select = adjusted,
-    #                          mutate_fun = rollapply, FUN = mean,
-    #                          width = 200, align = "right",
-    #                          col_rename = "avg200")
-    # assetPriceHistory <- rbind(agricultural, commodities)
-    ######### TEST DATA
-    
     
     assetPriceHistory$position <- "invested"
     assetPriceHistory[which(assetPriceHistory$adjusted <
