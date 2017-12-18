@@ -7,10 +7,15 @@ library("ggalt")
 library("tidyquant")
 library("reshape2")
 
+#
 etfOptions = c("DBA", "DBC", "IFGL", "IYR", "TIP",
         "AGG", "IEMG", "IEFA", "IJR", "ITOT")
 
 ui <- fluidPage(
+  #Remove search from data tables
+  tags$head(tags$style(
+    type="text/css", "tfoot {display:none;}"
+  )),
   dateRangeInput(
     inputId = "dateRange", 
     label="Date Range",
@@ -31,7 +36,7 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   
-  #Set the detault set of ETFs
+  #Create the full set etf data frame which will be trimmed by the multi-select
   etfs <- data.frame(ETF = c("DBA", "DBC", "IFGL", "IYR", "TIP",
                              "AGG", "IEMG", "IEFA", "IJR", "ITOT"),
                      Type = c("Agricultural", "Commodities", "Intl Real Estate",
@@ -42,11 +47,19 @@ server <- function(input, output) {
                                            "Yes", "Yes", "Yes", "Yes", "Yes"),
                      check.names = FALSE)
   
-  #Show the user the ETFs we are using
-  output$etfs <- renderDataTable({
-    title <- "ETF Information"
-    etfs <- etfs[etfs$ETF %in% input$assetSelect, ]
-  })
+  #Show a list of all currently selected ETFs
+  output$etfs <- renderDataTable(
+    {etfs <- etfs[etfs$ETF %in% input$assetSelect, ]},
+    options=list(
+      iDisplayLength=10, # initial number of records
+      aLengthMenu=c(5,10), # records/page options
+      bLengthChange=0, # show/hide records per page dropdown
+      bFilter=0, # global search box on/off
+      bInfo=0 # information on/off (how many records filtered, etc)
+      #bAutoWidth=0, # automatic column width calculation, disable if passing column width via aoColumnDefs
+      #aoColumnDefs = list(list(sWidth="300px", aTargets=c(list(0),list(1))))    # custom column size
+    )
+  )
   
   #Add an observer to the fetch button that populates a data frame of ETF data.
   observeEvent(input$submit, {
@@ -58,7 +71,7 @@ server <- function(input, output) {
     assetPriceHistory <- NULL
     withProgress(message = 'Making plot', value = 0, {
       for (i in 1:length(etfs$ETF)) {
-        incProgress(1/length(etfs$ETF), detail = paste("Doing part", i))
+        incProgress(1/length(etfs$ETF), detail = paste("Fetching stock", i))
         print(etfs$ETF[i])
         curEtf <- tq_get(toString(etfs$ETF[i]),
           get = "stock.prices",
