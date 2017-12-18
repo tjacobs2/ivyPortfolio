@@ -7,9 +7,18 @@ library("ggalt")
 library("tidyquant")
 library("reshape2")
 
-#
-etfOptions = c("DBA", "DBC", "IFGL", "IYR", "TIP",
-        "AGG", "IEMG", "IEFA", "IJR", "ITOT")
+#Create the full set etf data frame which will be trimmed by the multi-select
+etfs <- data.frame(ETF = c("DBA", "DBC", "IFGL", "IYR", "TIP",
+                           "AGG", "IEMG", "IEFA", "IJR", "ITOT"),
+                   Type = c("Agricultural", "Commodities", "Intl Real Estate",
+                            "US Real Estate", "TIPs Bonds", "US Aggregated Bonds",
+                            "Emerging Markets", "Foreign Total", "S&P Small Cap",
+                            "S&P Total"),
+                   "Commission Free" = c("No", "No", "Yes", "No", "Yes",
+                                         "Yes", "Yes", "Yes", "Yes", "Yes"),
+                   check.names = FALSE)
+options <- etfs$ETF
+names(options) <- paste(etfs$ETF, " -- ", etfs$Type)
 
 ui <- fluidPage(
   #Remove search from data tables
@@ -24,7 +33,8 @@ ui <- fluidPage(
   ),
   selectInput(
     inputId = "assetSelect",
-    choices = etfOptions,
+    choices = setNames(as.character(etfs$ETF), paste(etfs$ETF, " -- ", etfs$Type)),
+    selected = etfs$ETF,
     label="ETF Selection",
     multiple = TRUE,
     selectize = TRUE
@@ -35,29 +45,15 @@ ui <- fluidPage(
 )
 
 server <- function(input, output) {
-  
-  #Create the full set etf data frame which will be trimmed by the multi-select
-  etfs <- data.frame(ETF = c("DBA", "DBC", "IFGL", "IYR", "TIP",
-                             "AGG", "IEMG", "IEFA", "IJR", "ITOT"),
-                     Type = c("Agricultural", "Commodities", "Intl Real Estate",
-                              "US Real Estate", "TIPs Bonds", "US Aggregated Bonds",
-                              "Emerging Markets", "Foreign Total", "S&P Small Cap",
-                              "S&P Total"),
-                     "Commission Free" = c("No", "No", "Yes", "No", "Yes",
-                                           "Yes", "Yes", "Yes", "Yes", "Yes"),
-                     check.names = FALSE)
+
   
   #Show a list of all currently selected ETFs
   output$etfs <- renderDataTable(
     {etfs <- etfs[etfs$ETF %in% input$assetSelect, ]},
     options=list(
-      iDisplayLength=10, # initial number of records
-      aLengthMenu=c(5,10), # records/page options
-      bLengthChange=0, # show/hide records per page dropdown
-      bFilter=0, # global search box on/off
-      bInfo=0 # information on/off (how many records filtered, etc)
-      #bAutoWidth=0, # automatic column width calculation, disable if passing column width via aoColumnDefs
-      #aoColumnDefs = list(list(sWidth="300px", aTargets=c(list(0),list(1))))    # custom column size
+      paging=0, # no pagination
+      searching=0, # global search box off
+      info=0 # information off (how many records filtered, etc)
     )
   )
   
